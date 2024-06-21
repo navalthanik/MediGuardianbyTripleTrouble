@@ -1,12 +1,14 @@
 import os
 import streamlit as st
 from helpers.llm_helper import chat, stream_parser
-from config import Config
+from config import SPEAKER_TYPES, Config
 from dotenv import load_dotenv
 from Audio_helper import extract_audio_to_file, video_to_transcript_with_whisper
 import moviepy.editor as mp
 from Video_helper import download_youtube_audio, generate_unique_filename
 load_dotenv()
+from generative_ai import GeminiProModelChat
+chat_conversation = GeminiProModelChat()
 
 st.set_page_config(
     page_title="Medi-Guardian",
@@ -88,16 +90,33 @@ if user_prompt := st.chat_input("Hi, Welcome to Medi-Guardian. Your personal Hea
     with st.chat_message("user"):
         st.markdown(user_prompt)
 
-    st.session_state.messages.append({"role": "user", "content": user_prompt})
+    st.session_state['chat_history'].append({'role': SPEAKER_TYPES.USER, 'content': user_prompt})
 
-    with st.spinner('Generating response...'):
-        llm_response = chat(user_prompt, model=model, max_tokens=max_token_length, temp=temperature)
-        stream_output = st.write_stream(stream_parser(llm_response))
+    # Display chat messages
+    for message in st.session_state.chat_history[1:]:
+        with st.chat_message(message["role"], avatar="👤" if message['role'] == SPEAKER_TYPES.USER else "🤖"):
+            st.write(message["content"])
+  
+    response_stream = chat_conversation.get_gemini_response(user_prompt, stream=True)
+    response_text = ''
+    with st.chat_message(SPEAKER_TYPES.BOT, avatar="🤖"):
+        placeholder = st.empty()
+    with st.spinner(text='Generating response...'):
+      for chunk in response_stream:
+        response_text += chunk.text
+        placeholder.markdown(response_text)
+      placeholder.markdown(response_text)
+  
+    st.session_state['chat_history'].append({'role': SPEAKER_TYPES.BOT, 'content': response_text})
 
-        st.session_state.messages.append({"role": "assistant", "content": stream_output})
+    # with st.spinner('Generating response...'):
+    #     llm_response = chat(user_prompt, model=model, max_tokens=max_token_length, temp=temperature)
+    #     stream_output = st.write_stream(stream_parser(llm_response))
 
-    last_response = st.session_state.messages[-1]['content']
+    #     st.session_state.messages.append({"role": "assistant", "content": stream_output})
 
-    if str(last_response) != str(stream_output):
-        with st.chat_message("assistant"):
-            st.markdown(stream_output)
+    # last_response = st.session_state.messages[-1]['content']
+
+    # if str(last_response) != str(stream_output):
+    #     with st.chat_message("assistant"):
+    #         st.markdown(stream_output)
