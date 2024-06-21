@@ -3,13 +3,9 @@ import streamlit as st
 from helpers.llm_helper import chat, stream_parser
 from config import Config
 from dotenv import load_dotenv
-from videototext2 import extract_audio_to_file, video_to_transcript_with_whisper
+from Audio_helper import extract_audio_to_file, video_to_transcript_with_whisper
 import moviepy.editor as mp
-import whisper
-import time
-import yt_dlp
-import torch
-import uuid
+from Video_helper import download_youtube_audio, generate_unique_filename
 load_dotenv()
 
 st.set_page_config(
@@ -23,27 +19,6 @@ st.markdown("<h1 style='text-align: center;'>Medi-Guardian</h1>", unsafe_allow_h
 if not os.path.exists('temp'):
     os.makedirs('temp')
 
-def download_youtube_audio(youtube_link, output_path):
-    ydl_opts = {
-        'format': 'bestaudio/best',
-        'postprocessors': [{
-            'key': 'FFmpegExtractAudio',
-            'preferredcodec': 'mp3',
-            'preferredquality': '192',
-        }],
-        'outtmpl': output_path,
-        'prefer_ffmpeg': True,
-        'keepvideo': False
-    }
-
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([youtube_link])
-
-# Function to generate a unique filename
-def generate_unique_filename(extension):
-    return str(uuid.uuid4()) + extension
-
-# sets up sidebar nav widgets
 with st.sidebar:
     st.markdown("# Chat Options")
     
@@ -59,15 +34,13 @@ with st.sidebar:
     if uploaded_file is not None:
         video_path = os.path.join('temp', uploaded_file.name)
         audio_path = os.path.join('temp', uploaded_file.name.split('.')[0] + '.wav')
-        
         with open(video_path, 'wb') as f:
             f.write(uploaded_file.getbuffer())
         st.success("Uploaded file: {}".format(uploaded_file.name))
-        
-        # Extract audio and generate transcript
-        transcript = video_to_transcript_with_whisper(video_path, audio_path)
+        extract_audio_to_file(video_path,audio_path)
+
+        transcript = video_to_transcript_with_whisper(audio_path)
         st.markdown("### Transcript")
-        st.text(transcript)
 
     st.markdown("# YouTube Link")
     youtube_link = st.text_input('Enter YouTube link')
@@ -83,14 +56,7 @@ with st.sidebar:
                 audio_output_path = audio_output_path + '.mp3'
                 if os.path.exists(audio_output_path):
                     st.success("Downloaded YouTube audio: {}".format(unique_filename))
-
-                    # Transcribe the downloaded audio
-                    device = "cuda" if torch.cuda.is_available() else "cpu"
-                    model = whisper.load_model("medium", device=device)
-                    start_time = time.time()
-                    result = model.transcribe(audio_output_path)
-                    end_time = time.time()
-                    transcript = result["text"]
+                    transcript, end_time, start_time = video_to_transcript_with_whisper(audio_output_path)
                     st.markdown("### Transcript")
                     st.text(transcript)
                     st.success(f"Transcription took {end_time - start_time} seconds")
