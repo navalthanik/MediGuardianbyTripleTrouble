@@ -1,19 +1,26 @@
 import os
 import streamlit as st
 from helpers.llm_helper import chat, stream_parser
-from config import SPEAKER_TYPES, Config
+from config import SPEAKER_TYPES, initial_prompt, Config
 from dotenv import load_dotenv
 from Audio_helper import extract_audio_to_file, video_to_transcript_with_whisper
-import moviepy.editor as mp
 from Video_helper import download_youtube_audio, generate_unique_filename
 load_dotenv()
 from generative_ai import GeminiProModelChat
 chat_conversation = GeminiProModelChat()
-
+import pyperclip
+from SQLDB import init_db
 st.set_page_config(
     page_title="Medi-Guardian",
     initial_sidebar_state="expanded"
 )
+init_db()
+# Initialize a session state to hold the chat history
+if 'chat_history' not in st.session_state:
+  st.session_state.chat_history = [initial_prompt]
+
+def clear_chat_history():
+  st.session_state.chat_history = [initial_prompt]
 
 st.markdown("<h1 style='text-align: center;'>Medi-Guardian</h1>", unsafe_allow_html=True)
 
@@ -40,14 +47,10 @@ with st.sidebar:
             f.write(uploaded_file.getbuffer())
         st.success("Uploaded file: {}".format(uploaded_file.name))
         extract_audio_to_file(video_path,audio_path)
-
         transcript = video_to_transcript_with_whisper(audio_path)
         st.markdown("### Transcript")
-        if st.button('Copy Transcript'):
-            st.session_state['transcript'] = transcript  # Save transcript to session state for access
-            js = f"navigator.clipboard.writeText('{transcript}')"
-            st.components.v1.html(f"<script>{js}</script>", height=0)
-            st.success("Transcript copied to clipboard!")
+        pyperclip.copy(transcript)
+        st.success('Text copied successfully!')
         st.text_area("Transcript", value=transcript, height=300, disabled=True)
         
     st.markdown("# YouTube Link")
@@ -66,48 +69,39 @@ with st.sidebar:
                     st.success("Downloaded YouTube audio: {}".format(unique_filename))
                     transcript, end_time, start_time = video_to_transcript_with_whisper(audio_output_path)
                     st.markdown("### Transcript")
-                    if st.button('Copy Transcript'):
-                        st.session_state['transcript'] = transcript  # Save transcript to session state for access
-                        js = f"navigator.clipboard.writeText('{transcript}')"
-                        st.components.v1.html(f"<script>{js}</script>", height=0)
-                        st.success("Transcript copied to clipboard!")
+                    pyperclip.copy(transcript)
+                    st.success('Text copied successfully!')
                     st.text_area("Transcript", value=transcript, height=300, disabled=True)
                 else:
                     st.error("Failed to download YouTube audio.")
             except Exception as e:
                 st.error(f"Error downloading or processing YouTube audio: {e}")
 
-# checks for existing messages in session state
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+# Get user input and generate response
+prompt = st.chat_input("Ask Your Queries... ", key="user_input")
 
-# Display chat messages from session state
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# Show the welcome prompt
+with st.chat_message(SPEAKER_TYPES.BOT, avatar="🤖"):
+  st.write(initial_prompt['content'])
 
-if user_prompt := st.chat_input("Hi, Welcome to Medi-Guardian. Your personal Health assistant"):
-    with st.chat_message("user"):
-        st.markdown(user_prompt)
-
-    st.session_state['chat_history'].append({'role': SPEAKER_TYPES.USER, 'content': user_prompt})
-
-    # Display chat messages
-    for message in st.session_state.chat_history[1:]:
-        with st.chat_message(message["role"], avatar="👤" if message['role'] == SPEAKER_TYPES.USER else "🤖"):
-            st.write(message["content"])
+if prompt:
+  st.session_state['chat_history'].append({'role': SPEAKER_TYPES.USER, 'content': prompt})
+  # Display chat messages
+  for message in st.session_state.chat_history[1:]:
+    with st.chat_message(message["role"], avatar="👤" if message['role'] == SPEAKER_TYPES.USER else "🤖"):
+      st.write(message["content"])
   
-    response_stream = chat_conversation.get_gemini_response(user_prompt, stream=True)
-    response_text = ''
-    with st.chat_message(SPEAKER_TYPES.BOT, avatar="🤖"):
-        placeholder = st.empty()
+  response_stream = chat_conversation.get_gemini_response(prompt, stream=True)
+  response_text = ''
+  with st.chat_message(SPEAKER_TYPES.BOT, avatar="🤖"):
+    placeholder = st.empty()
     with st.spinner(text='Generating response...'):
       for chunk in response_stream:
         response_text += chunk.text
         placeholder.markdown(response_text)
       placeholder.markdown(response_text)
   
-    st.session_state['chat_history'].append({'role': SPEAKER_TYPES.BOT, 'content': response_text})
+  st.session_state['chat_history'].append({'role': SPEAKER_TYPES.BOT, 'content': response_text})
 
     # with st.spinner('Generating response...'):
     #     llm_response = chat(user_prompt, model=model, max_tokens=max_token_length, temp=temperature)
