@@ -9,7 +9,7 @@ import whisper
 import time
 import yt_dlp
 import torch
-
+import uuid
 load_dotenv()
 
 st.set_page_config(
@@ -38,6 +38,10 @@ def download_youtube_audio(youtube_link, output_path):
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         ydl.download([youtube_link])
+
+# Function to generate a unique filename
+def generate_unique_filename(extension):
+    return str(uuid.uuid4()) + extension
 
 # sets up sidebar nav widgets
 with st.sidebar:
@@ -69,17 +73,20 @@ with st.sidebar:
     youtube_link = st.text_input('Enter YouTube link')
     if youtube_link:
         st.success("Entered YouTube link: {}".format(youtube_link))
-        audio_output_path = os.path.join('temp', 'youtube_audio.mp3')
+
+        unique_filename = generate_unique_filename('.mp3')
+        audio_output_path = os.path.join('temp', unique_filename)
         
         with st.spinner('Downloading and processing YouTube audio...'):
             try:
                 download_youtube_audio(youtube_link, audio_output_path)
+                audio_output_path = audio_output_path + '.mp3'
                 if os.path.exists(audio_output_path):
-                    st.success("Downloaded YouTube audio: youtube_audio.mp3")
+                    st.success("Downloaded YouTube audio: {}".format(unique_filename))
 
                     # Transcribe the downloaded audio
                     device = "cuda" if torch.cuda.is_available() else "cpu"
-                    model = whisper.load_model("tiny", device=device)
+                    model = whisper.load_model("medium", device=device)
                     start_time = time.time()
                     result = model.transcribe(audio_output_path)
                     end_time = time.time()
