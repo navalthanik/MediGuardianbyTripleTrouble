@@ -1,6 +1,6 @@
 import os
 from ytdownloader import download_youtube_video_as_mp3
-from transcript_generator import transcribe_audio
+from transcript_generator import transcribe_audio, transcribe_audio_fast
 
 def main():
     url = input("Enter the YouTube URL: ")
@@ -16,7 +16,7 @@ def main():
 
     # Assuming the audio file is named after the video title in mp3 format
     audio_file_path = os.path.join(output_folder, os.listdir(output_folder)[0])
-    transcript_file_path = transcribe_audio(audio_file_path)
+    transcript_file_path = transcribe_audio_fast(audio_file_path)
     
     # # Move the transcript file to the Transcript folder
     # transcript_file_name = os.path.basename(transcript_file_path)
