@@ -41,7 +41,13 @@ with st.sidebar:
 
         transcript = video_to_transcript_with_whisper(audio_path)
         st.markdown("### Transcript")
-
+        if st.button('Copy Transcript'):
+            st.session_state['transcript'] = transcript  # Save transcript to session state for access
+            js = f"navigator.clipboard.writeText('{transcript}')"
+            st.components.v1.html(f"<script>{js}</script>", height=0)
+            st.success("Transcript copied to clipboard!")
+        st.text_area("Transcript", value=transcript, height=300, disabled=True)
+        
     st.markdown("# YouTube Link")
     youtube_link = st.text_input('Enter YouTube link')
     if youtube_link:
@@ -58,8 +64,12 @@ with st.sidebar:
                     st.success("Downloaded YouTube audio: {}".format(unique_filename))
                     transcript, end_time, start_time = video_to_transcript_with_whisper(audio_output_path)
                     st.markdown("### Transcript")
-                    st.text(transcript)
-                    st.success(f"Transcription took {end_time - start_time} seconds")
+                    if st.button('Copy Transcript'):
+                        st.session_state['transcript'] = transcript  # Save transcript to session state for access
+                        js = f"navigator.clipboard.writeText('{transcript}')"
+                        st.components.v1.html(f"<script>{js}</script>", height=0)
+                        st.success("Transcript copied to clipboard!")
+                    st.text_area("Transcript", value=transcript, height=300, disabled=True)
                 else:
                     st.error("Failed to download YouTube audio.")
             except Exception as e:
