@@ -3,13 +3,15 @@ import streamlit as st
 from helpers.llm_helper import chat, stream_parser
 from config import SPEAKER_TYPES, initial_prompt, Config
 from dotenv import load_dotenv
-from Audio_helper import extract_audio_to_file, video_to_transcript_with_whisper
+from Audio_helper import extract_audio_to_file, audio_to_transcript_with_whisper
+import moviepy.editor as mp
 from Video_helper import download_youtube_audio, generate_unique_filename
+import pyperclip
 load_dotenv()
 from generative_ai import GeminiProModelChat
 chat_conversation = GeminiProModelChat()
 import pyperclip
-from SQLDB import init_db
+from SQLDB import init_db, insert_video_data, get_video_transcript
 st.set_page_config(
     page_title="Medi-Guardian",
     initial_sidebar_state="expanded"
@@ -41,42 +43,56 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Choose a video file", type=['mp4', 'mkv'])
     
     if uploaded_file is not None:
-        video_path = os.path.join('temp', uploaded_file.name)
-        audio_path = os.path.join('temp', uploaded_file.name.split('.')[0] + '.wav')
-        with open(video_path, 'wb') as f:
-            f.write(uploaded_file.getbuffer())
-        st.success("Uploaded file: {}".format(uploaded_file.name))
-        extract_audio_to_file(video_path,audio_path)
-        transcript = video_to_transcript_with_whisper(audio_path)
-        st.markdown("### Transcript")
-        pyperclip.copy(transcript)
-        st.success('Text copied successfully!')
-        st.text_area("Transcript", value=transcript, height=300, disabled=True)
-        
+        transcript = get_video_transcript(uploaded_file.name)
+        if transcript:
+            st.markdown("### Transcript")
+            pyperclip.copy(transcript)
+            st.success('Text copied successfully!')
+            st.text_area("Transcript", value=transcript, height=300, disabled=True)
+        else:
+          video_path = os.path.join('temp', uploaded_file.name)
+          audio_path = os.path.join('temp', uploaded_file.name.split('.')[0] + '.wav')
+          with open(video_path, 'wb') as f:
+              f.write(uploaded_file.getbuffer())
+          st.success("Uploaded file: {}".format(uploaded_file.name))
+          extract_audio_to_file(video_path,audio_path)
+          transcript = audio_to_transcript_with_whisper(audio_path)
+          insert_video_data(video_name=uploaded_file.name,audio_name=audio_path, transcript=transcript, youtube_link="")
+          st.markdown("### Transcript")
+          pyperclip.copy(transcript)
+          st.success('Text copied successfully!')
+          st.text_area("Transcript", value=transcript, height=300, disabled=True)
+
     st.markdown("# YouTube Link")
     youtube_link = st.text_input('Enter YouTube link')
     if youtube_link:
-        st.success("Entered YouTube link: {}".format(youtube_link))
+        transcript = get_video_transcript(youtube_link)
+        if transcript:
+            st.markdown("### Transcript")
+            pyperclip.copy(transcript)
+            st.success('Text copied successfully!')
+            st.text_area("Transcript", value=transcript, height=300, disabled=True)
+        else:
+          st.success("Entered YouTube link: {}".format(youtube_link))
 
-        unique_filename = generate_unique_filename('.mp3')
-        audio_output_path = os.path.join('temp', unique_filename)
-        
-        with st.spinner('Downloading and processing YouTube audio...'):
-            try:
-                download_youtube_audio(youtube_link, audio_output_path)
-                audio_output_path = audio_output_path + '.mp3'
-                if os.path.exists(audio_output_path):
-                    st.success("Downloaded YouTube audio: {}".format(unique_filename))
-                    transcript, end_time, start_time = video_to_transcript_with_whisper(audio_output_path)
-                    st.markdown("### Transcript")
-                    pyperclip.copy(transcript)
-                    st.success('Text copied successfully!')
-                    st.text_area("Transcript", value=transcript, height=300, disabled=True)
-                else:
-                    st.error("Failed to download YouTube audio.")
-            except Exception as e:
-                st.error(f"Error downloading or processing YouTube audio: {e}")
-
+          video_name = youtube_link.split('=')[-1] + '.mp3'  # Assuming YouTube link contains video ID after '='
+          audio_output_path = os.path.join('temp', video_name)
+          
+          with st.spinner('Downloading and processing YouTube audio...'):
+              try:
+                  download_youtube_audio(youtube_link, audio_output_path)
+                  if os.path.exists(audio_output_path):
+                      st.success("Downloaded YouTube audio: {}".format(video_name))
+                      transcript = audio_to_transcript_with_whisper(audio_output_path)
+                      insert_video_data(video_name=video_name, audio_name=audio_output_path, transcript=transcript, youtube_link=youtube_link)
+                      st.markdown("### Transcript")
+                      pyperclip.copy(transcript)
+                      st.success('Text copied successfully!')
+                      st.text_area("Transcript", value=transcript, height=300, disabled=True)
+                  else:
+                      st.error("Failed to download YouTube audio.")
+              except Exception as e:
+                  st.error(f"Error downloading or processing YouTube audio: {e}")
 # Get user input and generate response
 prompt = st.chat_input("Ask Your Queries... ", key="user_input")
 

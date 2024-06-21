@@ -13,7 +13,7 @@ def extract_audio_to_file(video_path, audio_path):
         video = mp.VideoFileClip(video_path)
         video.audio.write_audiofile(audio_path, codec='pcm_s16le')
 
-def video_to_transcript_with_whisper(audio_path):
+def audio_to_transcript_with_whisper(audio_path):
 
     # Determine the device to load the model on
     device = "cuda" if torch.cuda.is_available() else "cpu"
