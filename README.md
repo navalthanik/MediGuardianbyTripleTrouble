@@ -1,5 +1,3 @@
-# Medi-Guardian by Triple Trouble
-Medi-Guardian is an chatbot designed to assist users by providing medical advice and handling multimedia inputs for generating transcripts. It leverages LLM model for generating responses and supports video and audio processing capabilities.
 # Medi-Guardian
 
 Medi-Guardian is a powerful chatbot created to assist users by processing multimedia inputs for transcript generation and offering medical advice. It can interpret audio and video by making use of LLM model to generate responses.
@@ -15,21 +13,14 @@ Medi-Guardian is a powerful chatbot created to assist users by processing multim
 
 Python ≥ 3.9
 
-### Steps installation of the project
+### Installation Steps for the Project
 
-1. Clone our repository 
+1. **Clone the Repository**: Access our codebase by cloning the Medi-Guardian repository.
+   - 🔗 [Clone the Medi-Guardian repository](https://github.com/navalthanik/MediGuardianbyTripleTrouble.git)
 
-<aside>
-🔗 [https://github.com/navalthanik/MediGuardianbyTripleTrouble.git](https://github.com/navalthanik/MediGuardianbyTripleTrouble.git)
+2. **Set Up a Virtual Environment** (Optional): Create an isolated Python environment to manage dependencies.
+   - 🤖 Run the command: `python -m venv virtual-environment-name`
 
-</aside>
+3. **Activate the Virtual Environment**: Ensure that the virtual environment is active before proceeding.
+   - On Windows, use: `virtual-environment-name\Scripts\activate`
 
-1. Make a virtual environment for python by below command (optional)
-
-<aside>
-🤖 python -m venv virtual-environment-name
-
-</aside>
-
-1. Activate your virtual environment.
-2. Open your project folder in terminal (command line)
