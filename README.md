@@ -20,7 +20,7 @@ Python ≥ 3.9
 1. Clone our repository 
 
 <aside>
-🔗 [https://github.com/gursimarsethi/MFC-Bot.git](https://github.com/gursimarsethi/MFC-Bot.git)
+🔗 [https://github.com/navalthanik/MediGuardianbyTripleTrouble.git](https://github.com/navalthanik/MediGuardianbyTripleTrouble.git)
 
 </aside>
 
