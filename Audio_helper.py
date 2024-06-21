@@ -25,4 +25,4 @@ def video_to_transcript_with_whisper(audio_path):
     end_time = time.time()
     transcript = result["text"]
     print(f"Transcription took {end_time - start_time} seconds")
-    return transcript, end_time, start_time
+    return transcript

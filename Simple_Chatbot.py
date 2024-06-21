@@ -4,17 +4,17 @@ from helpers.llm_helper import chat, stream_parser
 from config import SPEAKER_TYPES, initial_prompt, Config
 from dotenv import load_dotenv
 from Audio_helper import extract_audio_to_file, video_to_transcript_with_whisper
-import moviepy.editor as mp
 from Video_helper import download_youtube_audio, generate_unique_filename
 load_dotenv()
 from generative_ai import GeminiProModelChat
 chat_conversation = GeminiProModelChat()
 import pyperclip
+from SQLDB import init_db
 st.set_page_config(
     page_title="Medi-Guardian",
     initial_sidebar_state="expanded"
 )
-
+init_db()
 # Initialize a session state to hold the chat history
 if 'chat_history' not in st.session_state:
   st.session_state.chat_history = [initial_prompt]
@@ -47,7 +47,6 @@ with st.sidebar:
             f.write(uploaded_file.getbuffer())
         st.success("Uploaded file: {}".format(uploaded_file.name))
         extract_audio_to_file(video_path,audio_path)
-
         transcript = video_to_transcript_with_whisper(audio_path)
         st.markdown("### Transcript")
         pyperclip.copy(transcript)
