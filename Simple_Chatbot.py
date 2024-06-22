@@ -191,12 +191,12 @@ for message in st.session_state.messages:
 # React to user input
 # initial_message = "As a medical expert, please evaluate the text presented in the following message. Indicate whether each method is appropriate or not, and provide a definite result with an explanation. Please assist the user however necessary"
 initial_message = """"
-Act as a medical expert, please evaluate the text in the following message. 
-Firstly, Analysing all the message and tell that that is correct or not. means signtifially true or not.
+Act as a medical expert, please evaluate the text in the following structure
+
+Firstly, Give answers only in english.
+Assess if each method mentioned is scientifically proven and suitable for medical use. 
 Provide a detailed explanation of the scientific basis if the method is valid and suitable, or explain why it is not if otherwise. 
-Finally, conclude whether this method can be recommended for immediate use by humans. 
-For non-medical content, please state that it falls outside your field of expertise.
-Give answers only in english
+Finally, conclude whether this method can be recommended for immediate use by humans.
 """
 
 if prompt := st.chat_input("Hello and welcome! Please enter the text you would like to be evaluated by our medical expert. ") or st.session_state.get('chat_input'):
