@@ -49,13 +49,14 @@ if not os.path.exists('temp'):
 
 
 with st.sidebar:
-    st.write('# Previous Chats')
+    st.write('# Pick a previous chat')
     if st.session_state.get('chat_id') is None:
         st.session_state.chat_id = st.selectbox(
             label='Pick a previous chat',
             options=[new_chat_id] + list(past_chats.keys()),
             format_func=lambda x: past_chats.get(x, 'New Chat'),
             placeholder='_',
+            label_visibility="collapsed",
         )
     else:
         # This will happen the first time AI response comes in
@@ -65,6 +66,7 @@ with st.sidebar:
             index=1,
             format_func=lambda x: past_chats.get(x, 'New Chat' if x != st.session_state.chat_id else st.session_state.chat_title),
             placeholder='_',
+            label_visibility="collapsed",
         )
     st.session_state.chat_title = f'ChatSession-{st.session_state.chat_id}'
     
@@ -73,16 +75,18 @@ with st.sidebar:
     
     if uploaded_file is not None:
         start_time = time.time()
-        transcript = get_video_transcript(uploaded_file.name)
+        with st.spinner('Getting Video...'):
+            transcript = get_video_transcript(uploaded_file.name)
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Time taken to get transcript: {elapsed_time} seconds")
 
         if transcript:
-            st.markdown("### Transcript")
-            st.success('Text copied successfully!')
-            st.text_area("Transcript", value=transcript, height=300, disabled=True)
-            st.session_state.chat_input = transcript
+            # st.markdown("### Transcript")
+            # st.success('Text copied successfully!')
+            # st.text_area("Transcript", value=transcript, height=300, disabled=True)
+            with st.spinner('Sending Response to chat interface...'):
+                st.session_state.chat_input = transcript
         else:
           start_time = time.time()
           video_path = os.path.join('temp', uploaded_file.name)
@@ -90,59 +94,69 @@ with st.sidebar:
           with open(video_path, 'wb') as f:
               f.write(uploaded_file.getbuffer())
           st.success("Uploaded file: {}".format(uploaded_file.name))
-          extract_audio_to_file(video_path,audio_path)
+          with st.spinner('Extracting audio...'):
+            extract_audio_to_file(video_path,audio_path)
           print(audio_path)
           end_time = time.time()
           elapsed_time = end_time - start_time
           print(f"Time taken to extract audio: {elapsed_time} seconds")
 
-          transcript = audio_to_transcript_with_whisper(audio_path)
-        #   insert_video_data(video_name=uploaded_file.name,audio_name=audio_path, transcript=transcript, youtube_link="")
-          st.markdown("### Transcript")
-          st.success('Text copied successfully!')
-          st.text_area("Transcript", value=transcript, height=300, disabled=True)
-          st.session_state.chat_input = transcript
-    st.markdown("# YouTube Link")
-    youtube_link = st.text_input('Enter YouTube link')
-    if youtube_link:
-        transcript = get_video_transcript(youtube_link)
-        if transcript:
-            
-            st.markdown("### Transcript")
-            st.success('Text copied successfully!')
-            st.text_area("Transcript", value=transcript, height=300, disabled=True)
-            st.session_state.chat_input = transcript
-        else:
-            st.success("Entered YouTube link: {}".format(youtube_link))
+        
+          with st.spinner('Generating Text...'):
+              transcript = audio_to_transcript_with_whisper(audio_path)
+          insert_video_data(video_name=uploaded_file.name,audio_name=audio_path, transcript=transcript, youtube_link="")
+        #   st.markdown("### Transcript")
+        #   st.success('Text copied successfully!')
+        #   st.text_area("Transcript", value=transcript, height=300, disabled=True)
+        
+          with st.spinner('Sending response to chat interface...'):
+              st.session_state.chat_input = transcript
 
-            video_id = youtube_link.split('v=')[1].split('&')[0]
+
+    st.markdown("# Social Video Link")
+    youtube_link = st.text_input('Enter Social Video link')
+    if youtube_link:
+        with st.spinner('Generating Text...'):
+            transcript = get_video_transcript(youtube_link)
+        if transcript:
+            # st.markdown("### Transcript")
+            # st.success('Text copied successfully!')
+            # st.text_area("Transcript", value=transcript, height=300, disabled=True)
+            with st.spinner('Sending response to chat interface...'):
+                st.session_state.chat_input = transcript
+        else:
+            # st.success("Entered YouTube link: {}".format(youtube_link))
+
+            video_id = youtube_link.split('/')[-1]
             video_name = f"{video_id}.mp3"
             audio_output_path = os.path.join('temp', video_name)
             try:
-                with st.spinner('Downloading YouTube audio...'):
+                with st.spinner('Downloading YouTube video...'):
                     download_youtube_audio(youtube_link, audio_output_path)
-                    audio_output_path = audio_output_path + '.mp3'
+                    with st.spinner('Extracting audio...'):
+                        audio_output_path = audio_output_path + '.mp3'
                 
                 if os.path.exists(audio_output_path):
                     with st.spinner('Processing audio...'):
                         transcript = audio_to_transcript_with_whisper(audio_output_path)
                     
-                    st.success("Downloaded and processed YouTube audio: {}".format(video_name))
-                    # insert_video_data(video_name=video_name, audio_name=audio_path, transcript=transcript, youtube_link=youtube_link)
-                    st.markdown("### Transcript")
-                    st.text_area("Transcript", value=transcript, height=300, disabled=True)
-                    st.session_state.chat_input = transcript
+                    # st.success("Downloaded and processed YouTube audio: {}".format(video_name))
+                    insert_video_data(video_name=video_name, audio_name=audio_output_path, transcript=transcript, youtube_link=youtube_link)
+                    # st.markdown("### Transcript")
+                    # st.text_area("Transcript", value=transcript, height=300, disabled=True)
+                    with st.spinner('Sending Text to Chat interface...'):
+                        st.session_state.chat_input = transcript
                 else:
                     st.error("Failed to download YouTube audio.")
             except Exception as e:
                 st.error(f"Error downloading or processing YouTube audio: {e}")
     
-    st.markdown("# Chat Options")
-    # model = st.selectbox('What model would you like to use?', ('gpt-3.5-turbo', 'gpt-4'))
-    # temperature = st.number_input('Temperature', value=0.7, min_value=0.1, max_value=1.0, step=0.1,
-    #                               help="The temperature setting to be used when generating output from the model.")
-    max_token_length = st.number_input('Max Token Length', value=1000, min_value=200, max_value=1000, step=100, 
-                                       help="Maximum number of tokens to be used when generating output.")
+    # st.markdown("# Chat Options")
+    # # model = st.selectbox('What model would you like to use?', ('gpt-3.5-turbo', 'gpt-4'))
+    # # temperature = st.number_input('Temperature', value=0.7, min_value=0.1, max_value=1.0, step=0.1,
+    # #                               help="The temperature setting to be used when generating output from the model.")
+    # max_token_length = st.number_input('Max Token Length', value=1000, min_value=200, max_value=1000, step=100, 
+    #                                    help="Maximum number of tokens to be used when generating output.")
 
 
 #-------------------------------------------------------------------------------
@@ -175,9 +189,17 @@ for message in st.session_state.messages:
         st.markdown(message['content'])
 
 # React to user input
-initial_message = "As a medical expert, please evaluate the text presented in the following message. Indicate whether each method is appropriate or not, and provide a definite result with an explanation. Please assist the user however necessary"
+# initial_message = "As a medical expert, please evaluate the text presented in the following message. Indicate whether each method is appropriate or not, and provide a definite result with an explanation. Please assist the user however necessary"
+initial_message = """"
+Act as a medical expert, please evaluate the text in the following message. 
+Firstly, Analysing all the message and tell that that is correct or not. means signtifially true or not.
+Provide a detailed explanation of the scientific basis if the method is valid and suitable, or explain why it is not if otherwise. 
+Finally, conclude whether this method can be recommended for immediate use by humans. 
+For non-medical content, please state that it falls outside your field of expertise.
+Give answers only in english
+"""
 
-if prompt := st.chat_input('Your message here...') or st.session_state.get('chat_input'):
+if prompt := st.chat_input("Hello and welcome! Please enter the text you would like to be evaluated by our medical expert. ") or st.session_state.get('chat_input'):
     # Save this as a chat for later
     if st.session_state.chat_id not in past_chats.keys():
         past_chats[st.session_state.chat_id] = st.session_state.chat_title
@@ -194,7 +216,7 @@ if prompt := st.chat_input('Your message here...') or st.session_state.get('chat
     )
     ## Send message to AI
     response = st.session_state.chat.send_message(
-    initial_message + prompt,
+        initial_message + prompt,
         stream=True,
     )
     # Display assistant response in chat message container
