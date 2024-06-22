@@ -1,7 +1,11 @@
 import google.generativeai as genai
+
 from config import GoogleAIConfig
+
+
 # Configure GenAI
 genai.configure(api_key=GoogleAIConfig.GOOGLE_AI_API_KEY)
+
 
 class GoogleGenerativeModelInit:
   def __init__(self, model_name:str):
@@ -13,6 +17,7 @@ class GoogleGenerativeModelInit:
     
     # Initialise the model
     self.model = genai.GenerativeModel(self.model_name)
+    
 
 class GeminiProModelChat(GoogleGenerativeModelInit):
   def __init__(self):
