@@ -91,3 +91,6 @@ Additional Dependencies:
 
 >  `streamlit run myapp.py`
 
+### 📷 Output
+#### Medi-Guardian App UI on Streamlit.
+![Medi-Guardian Output Screenshot](https://github.com/navalthanik/MediGuardianbyTripleTrouble/assets/99556620/d21f6617-2d88-4269-b47d-e26f563cc5c4)
