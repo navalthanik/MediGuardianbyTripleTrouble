@@ -2,24 +2,25 @@
 
 <h1 align="center">Medi-Guardian</h1>
 <p align="center">
-  <em>A platform for medical fact checking and information retrieval.</em>
+  <em>A platform for medical fact-checking and information retrieval.</em>
 </p>
 
 ## 📍 Overview
 
 ***Objective***
 
-Medi-Guardian is a powerful chatbot designed to assist users by processing multimedia inputs for transcript generation & providing medical advice. It leverages advanced LLM models to interpret audio & video inputs.
+Medi-Guardian is a powerful chatbot designed to assist users by processing multimedia inputs for transcript generation and providing medical advice. It leverages advanced LLM models to interpret audio and video inputs.
 
 ***Motivation***
 
-People usually beleive on remedies and solutions avaliable on social media platforms which may cause them serious health issues. So, we aim to provide a platform where users can get cross the check and get validation of thier information.
+People often believe in remedies and solutions available on social media platforms, which may cause them serious health issues. Therefore, we aim to provide a platform where users can cross-check and validate their information.
 
 ---
+
 ## 🧩 Features
 
 ### 📲 Chat History
-- Capable to remember past conversations by using SQLite to store metadata and transcripts for efficient retrieval.
+- Capable of remembering past conversations by using SQLite to store metadata and transcripts for efficient retrieval.
 
 ### 📹 Multimedia Handling
 - Supports video uploads and audio extraction for transcript generation.
@@ -34,7 +35,7 @@ People usually beleive on remedies and solutions avaliable on social media platf
 **System Requirements:**
 
   - Python 3.9+
-  - Package manager: `pip` , `chocolatey`<em> (recommended)</em>
+  - Package manager: `pip`, `chocolatey` <em>(recommended)</em>
   - LLM service: `OpenAI Whisper`, `Google Gemini`
 
 **Repository URL or Local Path:**
@@ -56,25 +57,26 @@ Make sure to have a repository URL or local directory path ready for the CLI.
 > git clone https://github.com/navalthanik/MediGuardianbyTripleTrouble.git
 > ```
 
-#### 2. Make a virtual environment for python by below command (optional)
+#### 2. Make a virtual environment for Python (optional)
 >
 > ```sh
 > python -m venv virtual-environment-name
 > ```
    - Activate: `virtual-environment-name\Scripts\activate`
 
-### 3. Open your project folder in terminal (command line)
+#### 3. Open your project folder in the terminal (command line)
 
-### 4. Install Dependencies
+#### 4. Install Dependencies
 > ```sh
->pip install -r requirements.txt
+> pip install -r requirements.txt
 > ```
-Additional Dependencies:
+
+**Additional Dependencies:**
 
 ▹ **Install PyTorch** (If you have a CUDA-supported GPU)
-   >```sh
-   >pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-   > ```
+>```sh
+>pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+> ```
 
 ▹ **Install FFMPEG** (Recommended to run in PowerShell as Administrator)
    - Set Execution Policy: 
@@ -83,7 +85,7 @@ Additional Dependencies:
    >```
    - Install FFMPEG: 
    >```sh
-   >choco install ffmpeg`
+   >choco install ffmpeg
    >```
 
 ### 5. Run the Application ![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)
